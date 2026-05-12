@@ -4,10 +4,10 @@ import Symbolics
 import SymbolicUtils
 import SymJit
 
-@testset "Complex Symbols" begin
+@testset verbose=true "Complex Symbols" begin
     println("Running Complex Symbols tests...")
     
-    @testset "x::Complex" begin
+    @testset verbose=true "x::Complex" begin
         @testset "scalar real" begin
             Symbolics.@variables x::Complex
 
