@@ -24,7 +24,7 @@ end
     return SymbolicUtils.term(⊗, a, b; type=out_type, shape=Tuple(1:o for o in out_shape))
 end
 
-⊗(a<:QCSym.Gates.AbstractQuantumGate, b<:QCSym.Gates.AbstractQuantumGate) = SymbolicUtils.term(⊗, a, b)
+⊗(a::QCSym.Gates.AbstractQuantumGate, b::QCSym.Gates.AbstractQuantumGate) = SymbolicUtils.term(⊗, a, b)
 
 
 
