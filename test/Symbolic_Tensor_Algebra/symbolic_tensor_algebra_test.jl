@@ -17,7 +17,7 @@ import QCSym
         @testset "QCSym gates" begin
             gate1 = QCSym.Gates.H_Gate
             gate2 = QCSym.Gates.X_Gate
-            @test_nowarn QCSym.:⊗(gate1, gate2)
+            @test_throws MethodError QCSym.:⊗(gate1, gate2)
         end
     end
 end

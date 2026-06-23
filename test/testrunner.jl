@@ -2,8 +2,8 @@ using Test
 
 
 #tests = ["assem", "disassem", "simulator"]
-#tests = ["gates", "symbolic_tensor_algebra", "symjit", "symbolics"]
-tests = ["symbolic_tensor_algebra"]
+tests = ["gates", "symbolic_tensor_algebra", "symjit", "symbolics"]
+#tests = ["symbolic_tensor_algebra"]
 if !isempty(ARGS)
 	tests = ARGS  # Set list to same as command line args
 end
