@@ -109,7 +109,7 @@ end
 """
     _embed_gate(gate_matrix, qubits_global_indices, n_total) -> Matrix{Symbolics.Num}
 
-Embeds a `2^k × 2^k` gate matrix acting on qubits `qubits_global_indices` (sorted, 1-indexed,
+Embeds a `2^k × 2^k` gate matrix acting on qubit `qubits_global_indices` (sorted, 1-indexed,
 MSB = position 1) into the full `2^n_total × 2^n_total` Hilbert space by
 distributing gate matrix elements over the correct basis indices while treating
 all non-gate qubits as spectators.
