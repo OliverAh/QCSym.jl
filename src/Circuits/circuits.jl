@@ -6,9 +6,8 @@ import ..QCSym
 #import QCSym.Gates
 #import QCSym.Gates
 
-struct GateCollection
-    collections::Dict{Type{<:QCSym.Gates.AbstractGate}, Vector{<:QCSym.Gates.AbstractGate}}
-end
+include("./gatecollection.jl")
+include("./symbolic_tree.jl")
 
 @kwdef struct QuantumCircuit
     name::String = "MyCircuit"
