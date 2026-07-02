@@ -11,6 +11,10 @@ abstract type AbstractSingleQubitQuantumGate{T} <: AbstractQuantumGate{T} end
 abstract type AbstractMultiQubitQuantumGate{T} <: AbstractQuantumGate{T} end
 abstract type AbstractInternalSingleQubitQuantumGate{T} <: AbstractQuantumGate{T} end
 abstract type FillerGate end
+
+const GateDecomposition2x2Types = Dict{UInt, Vector{Type{<:AbstractGate}}}
+const GateDecomposition2x2Gates = Dict{UInt, Vector{<:AbstractGate}}
+
 macro insert_fields_AbstractQuantumGate()
     quote
         $(esc(:(num_qubits::Int)))
@@ -39,8 +43,8 @@ macro insert_fields_AbstractQuantumGate()
         $(esc(:(matrix22_c::Union{Nothing, Dict{Int, Vector{Symbolics.Arr{Complex{Symbolics.Num},2}}}})))
         $(esc(:(matrix22_t_numeric::Union{Nothing, Dict{Int, Vector{Array{Complex,2}}}})))
         $(esc(:(matrix22_c_numeric::Union{Nothing, Dict{Int, Vector{Array{Complex,2}}}})))
-        $(esc(:(gate22_t::Union{Nothing, Dict{Int, Vector{<:AbstractGate}}})))
-        $(esc(:(gate22_c::Union{Nothing, Dict{Int, Vector{<:AbstractGate}}})))
+        $(esc(:(gate22_t::Union{Nothing, GateDecomposition2x2Gates})))
+        $(esc(:(gate22_c::Union{Nothing, GateDecomposition2x2Gates})))
     end
 end
 
@@ -56,8 +60,8 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
         is_treat_numeric_only::Bool,
         name_prefix::String, name_short::String, qubits_t::Vector{T}, qubits_c::Union{Nothing, Vector{T}}=nothing,
         step::Int, num_summands_decomposed::Int, parameters::Union{Nothing, AbstractVector{String}, Dict{String, Dict{Symbolics.Num, <:Real}}}=nothing,
-        decomposition_t::Union{Nothing, Vector{Type{<:AbstractGate}}}=nothing,
-        decomposition_c::Union{Nothing, Vector{Type{<:AbstractGate}}}=nothing) where {T<:AbstractBit}
+        decomposition_t::Union{Nothing, GateDecomposition2x2Types}=nothing,
+        decomposition_c::Union{Nothing, GateDecomposition2x2Types}=nothing) where {T<:AbstractBit}
         
         num_qubits, num_qubits_t, num_qubits_c = _determine_num_qubits(qubits_t, qubits_c)
         is_parametric = parameters !== nothing
@@ -100,16 +104,16 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
 
         if decomposition_t !==nothing && decomposition_c !== nothing
             println("Hello")
-            @assert allequal([num_summands_decomposed, length(decomposition_t), length(decomposition_c)]) "decomposition_t and decomposition_c must have the same length"
-            gate22_t = Dict{Int, Vector{<:AbstractGate}}()
-            for qt in qubits_t
-                gate22_t[qt.index_global] = [eval(Meta.parse((String(nameof(decomposition_t[i]))*"_for_Circuit")))(;
+            @assert allequal([num_summands_decomposed, length(decomposition_t[1]), length(decomposition_c[1])]) "decomposition_t and decomposition_c must have the same length"
+            gate22_t = GateDecomposition2x2Gates()
+            for (idloc, qt) in enumerate(qubits_t)
+                gate22_t[qt.index_global] = [eval(Meta.parse((String(nameof(decomposition_t[idloc][i]))*"_for_Circuit")))(;
                 name_prefix=name, qubits_t=[qubits_t[1]], step=step,is_treat_numeric_only=is_treat_numeric_only,
                 is_treat_alt_only=is_treat_alt_only) for i in 1:num_summands_decomposed]
             end
-            gate22_c = Dict{Int, Vector{<:AbstractGate}}()
-            for qc in qubits_c
-                gate22_c[qc.index_global] = [eval(Meta.parse((String(nameof(decomposition_c[i]))*"_for_Circuit")))(;
+            gate22_c = GateDecomposition2x2Gates()
+            for (idloc, qc) in enumerate(qubits_c)
+                gate22_c[qc.index_global] = [eval(Meta.parse((String(nameof(decomposition_c[idloc][i]))*"_for_Circuit")))(;
                 name_prefix=name, qubits_t=[qubits_t[1]], step=step,is_treat_numeric_only=is_treat_numeric_only,
                 is_treat_alt_only=is_treat_alt_only) for i in 1:num_summands_decomposed]
             end

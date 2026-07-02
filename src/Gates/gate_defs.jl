@@ -327,8 +327,8 @@ function CX_Gate_for_Circuit(;name_prefix::String="", qubits_t::AbstractVector{Q
     base_gate = mutable_BaseQuantumGate_for_construction(is_treat_numeric_only=is_treat_numeric_only, 
         name_prefix=name_prefix, name_short="CX", qubits_t=qubits_t, qubits_c=qubits_c,
         step=step, num_summands_decomposed=2,
-        decomposition_t=Vector{Type{<:AbstractGate}}([I_Gate, X_Gate]),
-        decomposition_c=Vector{Type{<:AbstractGate}}([_00_Gate, _11_Gate]))
+        decomposition_t=GateDecomposition2x2Types(1=>[I_Gate, X_Gate]),
+        decomposition_c=GateDecomposition2x2Types(1=>[_00_Gate, _11_Gate]))
     base_gate.matrix_numeric = [1.0 0.0 0.0 0.0;
                                 0.0 1.0 0.0 0.0;
                                 0.0 0.0 0.0 1.0;
