@@ -62,15 +62,6 @@ mul(a::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUt
     #mul2(a, b)
 end
 
-mul2(a::QCSym.Gates._CMQGate{QCSym.BitsRegs.Bit}, b::QCSym.Gates._CMQGate{QCSym.BitsRegs.Bit}) = begin
-    #out_shape = (a.shape[1]*b.shape[1], a.shape[2]*b.shape[2])
-    println("In mul for _CMQGate")
-    _1 = length(a.shape[1])*length(b.shape[1])
-    _2 = length(a.shape[2])*length(b.shape[2])
-    out_shape = SymbolicUtils.ShapeVecT([1:_1,1:_2])
-    #SymbolicUtils.term(⊗, a, b; shape=out_shape, type=SymbolicUtils.BasicSymbolicImpl.Term{SymbolicUtils.SymReal})
-    SymbolicUtils.term(*, a, b; shape=out_shape, type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
-end
 
 # Base.:*(a::QCSym.Gates._CMQGate{QCSym.BitsRegs.Bit}, b::QCSym.Gates._CMQGate{QCSym.BitsRegs.Bit}) = begin
 #     @assert a.shape == b.shape "Gate shapes must match for basic multiplication, but got shapes $(a.shape) and $(b.shape)"
