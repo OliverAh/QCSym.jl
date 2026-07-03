@@ -3,6 +3,15 @@ import ..BitsRegs.AbstractBit
 #import ..BitsRegs.Bit
 import ..BitsRegs.MapBitID
 import ..BitsRegs.QBit
+import ..BitsRegs.BitRegister
+
+
+struct _CMQGate{T<:AbstractBit} <: AbstractMultiQubitQuantumGate{T}
+end
+
+struct _CMSMQGate{T<:Number} <: AbstractMultiQubitQuantumGate{T}
+end
+
 
 struct _00_Gate{T<:AbstractBit} <: AbstractInternalSingleQubitQuantumGate{T}
     @insert_fields_AbstractQuantumGate()
@@ -35,7 +44,6 @@ end
 struct I_Gate{T<:AbstractBit} <: AbstractSingleQubitQuantumGate{T}
     @insert_fields_AbstractQuantumGate()
     @constructor_from_mutable_base(I_Gate, mutable_BaseQuantumGate_for_construction)
-    
 end
 
 function I_Gate_for_Circuit(;name_prefix::String="", qubits_t::AbstractVector{QBit}, step::Int, is_treat_numeric_only::Bool, _...)
@@ -45,6 +53,22 @@ function I_Gate_for_Circuit(;name_prefix::String="", qubits_t::AbstractVector{QB
     base_gate.matrix_numeric = [1 0; 0 1]
     return I_Gate(base_gate)
 end
+
+struct I_Gate_Filler{T<:Int} <: AbstractSingleQubitQuantumGate{T}
+    qbit_glob_id::T
+    shape::SymbolicUtils.ShapeT
+    #@insert_fields_AbstractQuantumGate()
+    #@constructor_from_mutable_base(I_Gate, mutable_BaseQuantumGate_for_construction)
+    I_Gate_Filler(qbit_glob_id::T) where {T<:Int} = new{T}(qbit_glob_id, SymbolicUtils.ShapeVecT([1:2,1:2]))
+end
+
+Base.show(io::IO, gate::I_Gate_Filler) = begin
+    println(io, "Quantum Gate: I_Gate_Filler")
+    for name in fieldnames(typeof(gate))
+        println(io, "  ", name, ": ", getfield(gate, name))
+    end
+end
+
 
 struct X_Gate{T<:AbstractBit} <: AbstractSingleQubitQuantumGate{T}
     @insert_fields_AbstractQuantumGate()

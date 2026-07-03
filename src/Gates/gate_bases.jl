@@ -25,7 +25,8 @@ macro insert_fields_AbstractQuantumGate()
         $(esc(:(is_treat_alt_only::Bool)))
         $(esc(:(name::String)))
         $(esc(:(name_short::String)))
-        $(esc(:(shape::Tuple{Int, Int})))
+        #$(esc(:(shape::Tuple{Int, Int})))
+        $(esc(:(shape::SymbolicUtils.ShapeT)))
         $(esc(:(qubits::Array{T,1})))
         $(esc(:(qubits_t::Array{T,1})))
         $(esc(:(qubits_c::Union{Nothing, Array{T,1}})))
@@ -69,7 +70,9 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
         is_treat_alt_only = false
         name=_generate_name_str(name_prefix*name_short, step, qubits_t, qubits_c)
         name_short=name_short
-        shape=(2^num_qubits, 2^num_qubits)
+        #shape=(2^num_qubits, 2^num_qubits)
+        _N = 2^num_qubits
+        shape=SymbolicUtils.ShapeVecT([1:_N, 1:_N])
         qubits_t=qubits_t
         qubits_c=qubits_c
         qubits = isnothing(qubits_c) ? qubits_t : vcat(qubits_t, qubits_c)
@@ -86,7 +89,7 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
         end        
         atomics = nothing # will be set after matrix
         atomics_alt = parameters === nothing ? nothing : collect(v["sym"] for (k,v) in parameters)
-        matrix = eval(Meta.parse("Symbolics.@variables(($(name)::Complex)[1:$(shape[1]),1:$(shape[2])])"))
+        matrix = eval(Meta.parse("Symbolics.@variables(($(name)::Complex)[$(shape[1]),$(shape[2])])"))
         matrix = matrix[1]
         matrix_alt = nothing
         atomics = Symbolics.scalarize(matrix)[:]
@@ -103,7 +106,6 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
         gate22_c=nothing
 
         if decomposition_t !==nothing && decomposition_c !== nothing
-            println("Hello")
             @assert allequal([num_summands_decomposed, length(decomposition_t[1]), length(decomposition_c[1])]) "decomposition_t and decomposition_c must have the same length"
             gate22_t = GateDecomposition2x2Gates()
             for (idloc, qt) in enumerate(qubits_t)
@@ -117,8 +119,6 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
                 name_prefix=name, qubits_t=[qubits_t[1]], step=step,is_treat_numeric_only=is_treat_numeric_only,
                 is_treat_alt_only=is_treat_alt_only) for i in 1:num_summands_decomposed]
             end
-           
-           
            
            
         #    Dict(i => eval(Meta.parse((String(nameof(decomposition_t[i]))*"_for_Circuit")))(;
@@ -235,7 +235,6 @@ Base.show(io::IO, gate::T) where {T <: AbstractQuantumGate} = begin
         println(io, "  ", name, ": ", getfield(gate, name))
     end
 end
-
 
 function get_all_concrete_gates()
     

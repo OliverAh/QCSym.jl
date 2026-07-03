@@ -2,6 +2,23 @@ struct GateCollection
     collections::Dict{Type{<:QCSym.Gates.AbstractGate}, Vector{<:QCSym.Gates.AbstractGate}}
 end
 
+function _get_num_qubits(gcol::GateCollection)
+    qubits = Set{QCSym.BitsRegs.AbstractBit}()
+    for (gate_type, gates) in gcol.collections
+        for gate in gates
+            for q in gate.qubits_t
+                push!(qubits, q)
+            end
+            if gate.qubits_c !== nothing
+                for q in gate.qubits_c
+                    push!(qubits, q)
+                end
+            end
+        end
+    end
+    return length(qubits)
+end
+
 function _get_num_steps(gcol::GateCollection)
     steps = Int[]
     for (gate_type, gates) in gcol.collections
@@ -49,4 +66,8 @@ function _extract_gates_stepwise(gcol::GateCollection)
         end
     end
     return stepwise_gates
+end
+
+function _sort_by_glob_qbit_id(a::Vector{<:QCSym.Gates.AbstractGate})
+    sort!(a, by = x -> minimum([q.index_global for q in x.qubits_t]))
 end
