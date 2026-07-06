@@ -71,3 +71,11 @@ end
 function _sort_by_glob_qbit_id(a::Vector{<:QCSym.Gates.AbstractGate})
     sort!(a, by = x -> minimum([q.index_global for q in x.qubits_t]))
 end
+
+function _get_num_gates(gcol::GateCollection)
+    num_gates = 0
+    for (gate_type, gates) in gcol.collections
+        num_gates += length(gates)
+    end
+    return num_gates
+end

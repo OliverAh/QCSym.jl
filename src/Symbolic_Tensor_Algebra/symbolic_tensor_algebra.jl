@@ -42,6 +42,25 @@ end
     SymbolicUtils.term(⊗, a, b; shape=out_shape, type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
 end
 
+function ⊗(xs::AbstractVector{T}) where {T<:QCSym.Gates.AbstractGate}
+    isempty(xs) && throw(ArgumentError("⊗ requires at least one matrix/gate"))
+    # returned value matches r = SymbolicUtils.@rule  QCSym.:⊗(~~ys) => 1.0
+    # Kronecker product of a single factor is the factor itself
+    length(xs) == 1 && return only(xs)
+
+    _1 = prod(length(x.shape[1]) for x in xs)
+    _2 = prod(length(x.shape[2]) for x in xs)
+
+    out_shape = SymbolicUtils.ShapeVecT([1:_1, 1:_2])
+
+    return SymbolicUtils.term(
+        ⊗,
+        xs...;
+        shape = out_shape,
+        type = QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit},
+    )
+end
+
 ⊗(a::SymbolicUtils.BasicSymbolic, b::QCSym.Gates.AbstractQuantumGate) = begin
     println("Ended up here")
     println(a.shape)
@@ -56,12 +75,33 @@ end
 end
 
 mul(a::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}, b::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}) = begin
+    
+    @assert SymbolicUtils.symtype(a) == QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit} || (SymbolicUtils.symtype(a) == QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit}) "Gate types must be either _CMQGate or _CMSMQGate for basic multiplication, but got types a $(SymbolicUtils.symtype(a))"
+    
+    @assert SymbolicUtils.symtype(b) == QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit} || (SymbolicUtils.symtype(b) == QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit}) "Gate types must be either _CMQGate or _CMSMQGate for basic multiplication, but got types b $(SymbolicUtils.symtype(b))"
+        
+    
     @assert a.shape == b.shape "Gate shapes must match for basic multiplication, but got shapes $(a.shape) and $(b.shape)"
     out_shape = SymbolicUtils.promote_shape(*, a.shape, b.shape)
-    SymbolicUtils.term(*, a, b; shape=out_shape, type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
+    
+    SymbolicUtils.term(mul, a, b; shape=out_shape, type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
     #mul2(a, b)
 end
 
+mul(a::AbstractVector{SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}}) = begin
+    
+    for i in eachindex(a)
+        @assert SymbolicUtils.symtype(a[i]) == QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit} "Gate types must be either _CMQGate for basic multiplication, but got types a[$i] $(SymbolicUtils.symtype(a[i]))"
+    end
+    for i in eachindex(a)
+        @assert a[1].shape == a[i].shape "Gate shapes must match for basic multiplication, but got shapes $(a[1].shape) and $(a[i].shape)"
+    end    
+    
+    out_shape = a[1].shape
+    
+    SymbolicUtils.term(mul, a...; shape=out_shape, type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
+    #mul2(a, b)
+end
 
 # Base.:*(a::QCSym.Gates._CMQGate{QCSym.BitsRegs.Bit}, b::QCSym.Gates._CMQGate{QCSym.BitsRegs.Bit}) = begin
 #     @assert a.shape == b.shape "Gate shapes must match for basic multiplication, but got shapes $(a.shape) and $(b.shape)"

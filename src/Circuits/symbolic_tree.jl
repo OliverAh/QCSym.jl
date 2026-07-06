@@ -12,6 +12,7 @@ function gcol2tree(gcol::GateCollection)
     println("   Number of qubits: $num_qubits")
 
     U = nothing
+    U_intermediate = QCSym.SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{QCSym.SymbolicUtils.SymReal}[]
     for s in steps
         U_step = nothing
         gates_at_step = stepwise_gates[s]
@@ -31,12 +32,14 @@ function gcol2tree(gcol::GateCollection)
             vec_filled_sq_gates[qid] = sqg
         end
 
-        U_step_sq = vec_filled_sq_gates[1]
-        if num_qubits > 1
-            for q in 2:num_qubits
-                U_step_sq = QCSym.:⊗(U_step_sq, vec_filled_sq_gates[q])
-            end
-        end
+        # U_step_sq = vec_filled_sq_gates[1]
+        # if num_qubits > 1
+        #     for q in 2:num_qubits
+        #         U_step_sq = QCSym.:⊗(U_step_sq, vec_filled_sq_gates[q])
+        #     end
+        # end
+
+        U_step_sq = QCSym.:⊗(vec_filled_sq_gates)
 
         println(typeof(U_step_sq))
 
@@ -46,12 +49,10 @@ function gcol2tree(gcol::GateCollection)
         println(U_step)
         println(U)
 
-
-
-
-
-        U = U === nothing ? U_step : QCSym.mul(U_step, U)
+        U_intermediate = push!(U_intermediate, U_step)
+        #U = U === nothing ? U_step : QCSym.mul(U_step, U)
     end
+    U = QCSym.mul(U_intermediate)
     
     return U
 end

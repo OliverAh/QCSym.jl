@@ -5,11 +5,12 @@ import ..BitsRegs.MapBitID
 import ..BitsRegs.QBit
 import ..BitsRegs.BitRegister
 
-
-struct _CMQGate{T<:AbstractBit} <: AbstractMultiQubitQuantumGate{T}
+# kronecker product of single qubit gates, including 2x2 decompositions of multi qubit gates
+struct _CMQGate{T<:AbstractBit} <: AbstractQuantumGate{T}
 end
 
-struct _CMSMQGate{T<:Number} <: AbstractMultiQubitQuantumGate{T}
+# matrix-matrix product of kronecker products ...
+struct _CMSMQGate{T<:AbstractBit} <: AbstractQuantumGate{T}
 end
 
 
