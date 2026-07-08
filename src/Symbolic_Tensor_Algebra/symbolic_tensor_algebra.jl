@@ -18,19 +18,19 @@ function _promote_shape_nD(a::Symbolics.Arr{T}, b::Symbolics.Arr{T2}) where {T, 
     return Tuple(sout)
 end
 
-⊗(a::Symbolics.Arr{T}, b::Symbolics.Arr{T2}) where {T, T2} = begin
-    out_shape = _promote_shape_nD(a, b)
-    #out_type = Symbolics.Arr{promote_type(eltype(a), eltype(b)),length(out_shape)}
-    out_type = SymbolicUtils.promote_symtype(*, eltype(a), eltype(b))
-    return SymbolicUtils.term(⊗, a, b; type=out_type, shape=Tuple(1:o for o in out_shape))
-end
+# ⊗(a::Symbolics.Arr{T}, b::Symbolics.Arr{T2}) where {T, T2} = begin
+#     out_shape = _promote_shape_nD(a, b)
+#     #out_type = Symbolics.Arr{promote_type(eltype(a), eltype(b)),length(out_shape)}
+#     out_type = SymbolicUtils.promote_symtype(*, eltype(a), eltype(b))
+#     return SymbolicUtils.term(⊗, a, b; type=out_type, shape=Tuple(1:o for o in out_shape))
+# end
 
-⊗(a::Array{T,2}, b::Array{T2,2}) where {T, T2} = begin
-    out_shape = _promote_shape_nD(a, b)
-    #out_type = Symbolics.Arr{promote_type(eltype(a), eltype(b)),length(out_shape)}
-    out_type = SymbolicUtils.promote_symtype(*, eltype(a), eltype(b))
-    return SymbolicUtils.term(⊗, a, b; type=out_type, shape=Tuple(1:o for o in out_shape))
-end
+# ⊗(a::Array{T,2}, b::Array{T2,2}) where {T, T2} = begin
+#     out_shape = _promote_shape_nD(a, b)
+#     #out_type = Symbolics.Arr{promote_type(eltype(a), eltype(b)),length(out_shape)}
+#     out_type = SymbolicUtils.promote_symtype(*, eltype(a), eltype(b))
+#     return SymbolicUtils.term(⊗, a, b; type=out_type, shape=Tuple(1:o for o in out_shape))
+# end
 
 
 ⊗(a::QCSym.Gates.AbstractQuantumGate, b::QCSym.Gates.AbstractQuantumGate) = begin
@@ -39,7 +39,8 @@ end
     _2 = length(a.shape[2])*length(b.shape[2])
     out_shape = SymbolicUtils.ShapeVecT([1:_1,1:_2])
     #SymbolicUtils.term(⊗, a, b; shape=out_shape, type=SymbolicUtils.BasicSymbolicImpl.Term{SymbolicUtils.SymReal})
-    SymbolicUtils.term(⊗, a, b; shape=out_shape, type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
+    #SymbolicUtils.term(⊗, a, b; shape=out_shape, type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
+    SymbolicUtils.term(⊗, a, b; shape = SymbolicUtils.SmallVec{UnitRange{Int64}, Vector{UnitRange{Int64}}}([1:1]), type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
 end
 
 function ⊗(xs::AbstractVector{T}) where {T<:QCSym.Gates.AbstractGate}
@@ -56,7 +57,8 @@ function ⊗(xs::AbstractVector{T}) where {T<:QCSym.Gates.AbstractGate}
     return SymbolicUtils.term(
         ⊗,
         xs...;
-        shape = out_shape,
+        #shape = out_shape,
+        shape = SymbolicUtils.SmallVec{UnitRange{Int64}, Vector{UnitRange{Int64}}}([1:1]), 
         type = QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit},
     )
 end
@@ -71,7 +73,8 @@ end
     _2 = length(a.shape[2])*length(b.shape[2])
     out_shape = SymbolicUtils.ShapeVecT([1:_1,1:_2])
     #SymbolicUtils.term(⊗, a, b; shape=out_shape, type=SymbolicUtils.BasicSymbolicImpl.Term{SymbolicUtils.SymReal})
-    SymbolicUtils.term(⊗, a, b; shape=out_shape, type=QCSym.Gates._CMQGate{QCSym.BitsRegs.Bit})
+    #SymbolicUtils.term(⊗, a, b; shape=out_shape, type=QCSym.Gates._CMQGate{QCSym.BitsRegs.Bit})
+    SymbolicUtils.term(⊗, a, b; shape=SymbolicUtils.SmallVec{UnitRange{Int64}, Vector{UnitRange{Int64}}}([1:1]), type=QCSym.Gates._CMQGate{QCSym.BitsRegs.Bit})
 end
 
 mul(a::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}, b::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}) = begin
@@ -84,8 +87,8 @@ mul(a::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUt
     @assert a.shape == b.shape "Gate shapes must match for basic multiplication, but got shapes $(a.shape) and $(b.shape)"
     out_shape = SymbolicUtils.promote_shape(*, a.shape, b.shape)
     
-    SymbolicUtils.term(mul, a, b; shape=out_shape, type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
-    #mul2(a, b)
+    #SymbolicUtils.term(mul, a, b; shape=out_shape, type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
+    SymbolicUtils.term(mul, a, b;shape=SymbolicUtils.SmallVec{UnitRange{Int64}, Vector{UnitRange{Int64}}}([1:1]), type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
 end
 
 mul(a::AbstractVector{SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}}) = begin
@@ -93,36 +96,13 @@ mul(a::AbstractVector{SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicIm
     for i in eachindex(a)
         @assert SymbolicUtils.symtype(a[i]) == QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit} "Gate types must be either _CMQGate for basic multiplication, but got types a[$i] $(SymbolicUtils.symtype(a[i]))"
     end
-    for i in eachindex(a)
-        @assert a[1].shape == a[i].shape "Gate shapes must match for basic multiplication, but got shapes $(a[1].shape) and $(a[i].shape)"
-    end    
+    # for i in eachindex(a)
+    #     @assert a[1].shape == a[i].shape "Gate shapes must match for basic multiplication, but got shapes $(a[1].shape) and $(a[i].shape)"
+    # end    
     
     out_shape = a[1].shape
     
-    SymbolicUtils.term(mul, a...; shape=out_shape, type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
-    #mul2(a, b)
+    #SymbolicUtils.term(mul, a...; shape=out_shape, type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
+    SymbolicUtils.term(mul, a...; shape=SymbolicUtils.SmallVec{UnitRange{Int64}, Vector{UnitRange{Int64}}}([1:1]), type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
 end
 
-# Base.:*(a::QCSym.Gates._CMQGate{QCSym.BitsRegs.Bit}, b::QCSym.Gates._CMQGate{QCSym.BitsRegs.Bit}) = begin
-#     @assert a.shape == b.shape "Gate shapes must match for basic multiplication, but got shapes $(a.shape) and $(b.shape)"
-#     out_shape = SymbolicUtils.promote_shape(*, a.shape, b.shape)
-#     SymbolicUtils.term(*, a, b; shape=out_shape, type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.BitRegister{QCSym.BitsRegs.Bit}})
-# end
-
-
-# for f ∈ [:⊗]
-#     @eval begin
-#         $f(x::Union{QCSym.SymbolicUtils.Expr, Symbol, QCSym.Gates.AbstractQuantumGate}, y::Number) = Expr(:call, $f, x, y)
-#         $f(x::Number, y::Union{QCSym.SymbolicUtils.Expr, Symbol, QCSym.Gates.AbstractQuantumGate}) = Expr(:call, $f, x, y)
-#         $f(x::Union{QCSym.SymbolicUtils.Expr, Symbol, QCSym.Gates.AbstractQuantumGate}, y::Union{QCSym.SymbolicUtils.Expr, Symbol, QCSym.Gates.AbstractQuantumGate}) = (Expr(:call, $f, x, y))
-#     end
-# end
-# Base.:*(a::SymbolicUtils.Expr, b::SymbolicUtils.Expr) = SymbolicUtils.Expr(:call, :*, a, b)
-
-#⊗(a::Type{<:QCSym.Gates.AbstractQuantumGate}, b::Type{<:QCSym.Gates.AbstractQuantumGate}) = SymbolicUtils.term(⊗, a, b)
-
-
-
-
-# import Base.:*
-# Base.:*(a::SymbolicUtils.BSImpl.Type, b::SymbolicUtils.BSImpl.Type) = SymbolicUtils.term(*, a, b)
