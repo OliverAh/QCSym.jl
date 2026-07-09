@@ -39,7 +39,7 @@ function gcol2tree(gcol::GateCollection)
         #     end
         # end
 
-        U_step_sq = QCSym.:⊗(vec_filled_sq_gates...)
+        U_step_sq = QCSym.:⊗(vec_filled_sq_gates)
 
         println(typeof(U_step_sq))
 
@@ -50,9 +50,9 @@ function gcol2tree(gcol::GateCollection)
         println(U)
 
         U_intermediate = push!(U_intermediate, U_step)
-        #U = U === nothing ? U_step : QCSym.:⊙(U_step, U)
+        #U = U === nothing ? U_step : QCSym.mul(U_step, U)
     end
-    U = QCSym.:⊙(U_intermediate...)
+    U = QCSym.mul(U_intermediate)
     
     return U
 end

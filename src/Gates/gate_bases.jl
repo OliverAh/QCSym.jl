@@ -24,6 +24,7 @@ macro insert_fields_AbstractQuantumGate()
         $(esc(:(is_treat_numeric_only::Bool)))
         $(esc(:(is_treat_alt_only::Bool)))
         $(esc(:(name::String)))
+        $(esc(:(symbol::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal})))
         $(esc(:(name_short::String)))
         #$(esc(:(shape::Tuple{Int, Int})))
         $(esc(:(shape::SymbolicUtils.ShapeT)))
@@ -87,6 +88,16 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
                 error("parameters must be either a Vector{Symbolics.Num} or a Dict{Symbolics.Num, <:Complex} or a Dict{Symbolics.Num, <:Real}")
             end
         end        
+        parameter_symbols = parameters === nothing ? Vector{Union{Complex{Symbolics.Num}}}() : collect(Complex{Symbolics.Num}, v["sym"] for (k,v) in parameters)
+        
+        println("Parameter symbols: ", parameter_symbols)
+
+        symbol = if isempty(parameter_symbols)
+            eval(:(Symbolics.@variables($(Symbol(name))::Complex{Real})[1]))
+        else
+            out_sym = Symbolics.variable(Symbol(name); T=Symbolics.FnType{Tuple{Vararg{Number}}, Number, Nothing})
+            SymbolicUtils.unwrap(out_sym(parameter_symbols...))
+        end
         atomics = nothing # will be set after matrix
         atomics_alt = parameters === nothing ? nothing : collect(v["sym"] for (k,v) in parameters)
         matrix = eval(Meta.parse("Symbolics.@variables(($(name)::Complex)[$(shape[1]),$(shape[2])])"))
@@ -135,7 +146,7 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
 
         return new{T}(num_qubits, num_qubits_t, num_qubits_c,
             is_parametric, is_treat_numeric_only, is_treat_alt_only,
-            name, name_short, shape, qubits, qubits_t, qubits_c,
+            name, symbol, name_short, shape, qubits, qubits_t, qubits_c,
             step, num_summands_decomposed, parameters, atomics, atomics_alt,
             matrix, matrix_alt, ids_matrix_zeros, matrix_numeric,
             matrix22_t, matrix22_t_alt, matrix22_c,
