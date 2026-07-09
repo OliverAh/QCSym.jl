@@ -45,8 +45,8 @@ macro insert_fields_AbstractQuantumGate()
         $(esc(:(matrix22_c::Union{Nothing, Dict{Int, Vector{Symbolics.Arr{Complex{Symbolics.Num},2}}}})))
         $(esc(:(matrix22_t_numeric::Union{Nothing, Dict{Int, Vector{Array{Complex,2}}}})))
         $(esc(:(matrix22_c_numeric::Union{Nothing, Dict{Int, Vector{Array{Complex,2}}}})))
-        $(esc(:(gate22_t::Union{Nothing, GateDecomposition2x2Gates})))
-        $(esc(:(gate22_c::Union{Nothing, GateDecomposition2x2Gates})))
+        $(esc(:(gates22_t::Union{Nothing, GateDecomposition2x2Gates})))
+        $(esc(:(gates22_c::Union{Nothing, GateDecomposition2x2Gates})))
     end
 end
 
@@ -111,20 +111,20 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
         matrix22_t_numeric=nothing
         matrix22_c_numeric=nothing
 
-        gate22_t=nothing
-        gate22_c=nothing
+        gates22_t=nothing
+        gates22_c=nothing
 
         if decomposition_t !==nothing && decomposition_c !== nothing
             @assert allequal([num_summands_decomposed, length(decomposition_t[1]), length(decomposition_c[1])]) "decomposition_t and decomposition_c must have the same length"
-            gate22_t = GateDecomposition2x2Gates()
+            gates22_t = GateDecomposition2x2Gates()
             for (idloc, qt) in enumerate(qubits_t)
-                gate22_t[qt.index_global] = [eval(Meta.parse((String(nameof(decomposition_t[idloc][i]))*"_for_Circuit")))(;
+                gates22_t[qt.index_global] = [eval(Meta.parse((String(nameof(decomposition_t[idloc][i]))*"_for_Circuit")))(;
                 name_prefix=name, qubits_t=[qubits_t[1]], step=step,is_treat_numeric_only=is_treat_numeric_only,
                 is_treat_alt_only=is_treat_alt_only) for i in 1:num_summands_decomposed]
             end
-            gate22_c = GateDecomposition2x2Gates()
+            gates22_c = GateDecomposition2x2Gates()
             for (idloc, qc) in enumerate(qubits_c)
-                gate22_c[qc.index_global] = [eval(Meta.parse((String(nameof(decomposition_c[idloc][i]))*"_for_Circuit")))(;
+                gates22_c[qc.index_global] = [eval(Meta.parse((String(nameof(decomposition_c[idloc][i]))*"_for_Circuit")))(;
                 name_prefix=name, qubits_t=[qubits_t[1]], step=step,is_treat_numeric_only=is_treat_numeric_only,
                 is_treat_alt_only=is_treat_alt_only) for i in 1:num_summands_decomposed]
             end
@@ -148,7 +148,7 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
             step, num_summands_decomposed, parameters, atomics, atomics_alt,
             matrix, matrix_alt, ids_matrix_zeros, matrix_numeric,
             matrix22_t, matrix22_t_alt, matrix22_c,
-            matrix22_t_numeric, matrix22_c_numeric, gate22_t, gate22_c
+            matrix22_t_numeric, matrix22_c_numeric, gates22_t, gates22_c
         )
     end
 end

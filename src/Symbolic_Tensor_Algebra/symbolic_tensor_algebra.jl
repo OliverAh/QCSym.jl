@@ -1,5 +1,3 @@
-import Base
-
 function _promote_shape_nD(a::Symbolics.Arr{T}, b::Symbolics.Arr{T2}) where {T, T2}
     sizea = size(a)
     sizeb = size(b)
@@ -20,27 +18,29 @@ end
 
 
 ⊗(x1, x2) = begin
-    return SymbolicUtils.term(⊗, x1, x2; type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
+    return SymbolicUtils.term(⊗, x1, x2; type=SymbolicUtils.SymReal)
 end
 
 ⊗(x1::Complex{Symbolics.Num}, x2) = begin
-    return SymbolicUtils.term(⊗, x1, x2; type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
+    return SymbolicUtils.term(⊗, x1, x2; type=SymbolicUtils.SymReal)
 end
 ⊗(x1, x2::Complex{Symbolics.Num}) = begin
-    return SymbolicUtils.term(⊗, x1, x2; type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
+    return SymbolicUtils.term(⊗, x1, x2; type=SymbolicUtils.SymReal)
 end
 ⊗(xs::Vararg{Any}) = begin
-    return SymbolicUtils.term(⊗, xs...; type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
+    return SymbolicUtils.term(⊗, xs...; type=SymbolicUtils.SymReal)
 end
 
 
 ⊙(x1::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}, x2::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}) = begin
-    return SymbolicUtils.term(⊙, x1, x2; type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
+    return SymbolicUtils.term(⊙, x1, x2; type=SymbolicUtils.SymReal)
 end
 
 ⊙(xs::Vararg{SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}}) = begin
-    return SymbolicUtils.term(⊙, xs...; type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
+    return SymbolicUtils.term(⊙, xs...; type=SymbolicUtils.SymReal)
 end
+
+SymbolicUtils.islike(a::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}, ::Type{Number}) = true
 
 is_matop(f) = f === (⊗) || f === (⊙)
 

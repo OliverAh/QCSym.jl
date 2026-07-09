@@ -58,9 +58,10 @@ end
 struct I_Gate_Filler{T<:Int} <: AbstractSingleQubitQuantumGate{T}
     qbit_glob_id::T
     shape::SymbolicUtils.ShapeT
+    symbol::Symbolics.Num
     #@insert_fields_AbstractQuantumGate()
     #@constructor_from_mutable_base(I_Gate, mutable_BaseQuantumGate_for_construction)
-    I_Gate_Filler(qbit_glob_id::T) where {T<:Int} = new{T}(qbit_glob_id, SymbolicUtils.ShapeVecT([1:2,1:2]))
+    I_Gate_Filler(qbit_glob_id::T) where {T<:Int} = new{T}(qbit_glob_id, SymbolicUtils.ShapeVecT([1:2,1:2]), SymbolicUtils.one_of_vartype(SymbolicUtils.SymReal))
 end
 
 Base.show(io::IO, gate::I_Gate_Filler) = begin
