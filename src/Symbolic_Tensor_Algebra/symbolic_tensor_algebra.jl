@@ -1,3 +1,5 @@
+import LinearAlgebra
+
 function _promote_shape_nD(a::Symbolics.Arr{T}, b::Symbolics.Arr{T2}) where {T, T2}
     sizea = size(a)
     sizeb = size(b)
@@ -31,6 +33,14 @@ end
     return SymbolicUtils.term(⊗, xs...; type=SymbolicUtils.SymReal)
 end
 
+⊗(x1::Number, x2::Number) = begin
+    return x1 * x2
+end
+
+⊗(x1::AbstractArray{<:Number}, x2::AbstractArray{<:Number}) = begin
+    return LinearAlgebra.kron(x1, x2)
+end
+
 
 ⊙(x1::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}, x2::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}) = begin
     return SymbolicUtils.term(⊙, x1, x2; type=SymbolicUtils.SymReal)
@@ -39,6 +49,27 @@ end
 ⊙(xs::Vararg{SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}}) = begin
     return SymbolicUtils.term(⊙, xs...; type=SymbolicUtils.SymReal)
 end
+
+⊙(x1::Number, x2::Number) = begin
+    return x1 * x2
+end
+
+⊙(x1::AbstractMatrix{<:Number}, x2::AbstractMatrix{<:Number}) = begin
+    return x1 * x2
+end
+
+⊙(x1::Number, x2::AbstractMatrix{<:Number}) = begin
+    return x1 * x2
+end
+
+⊙(x1::AbstractMatrix{<:Number}, x2::Number) = begin
+    return x1 * x2
+end
+
+⊙(xs::Vararg{AbstractMatrix{<:Number}}) = begin
+    return *(xs...)
+end
+
 
 SymbolicUtils.islike(a::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}, ::Type{Number}) = true
 

@@ -79,3 +79,72 @@ function _get_num_gates(gcol::GateCollection)
     end
     return num_gates
 end
+
+
+function _s2g_parametric(s, gate)
+    for (_, p) in gate.parameters
+        if isequal(p["sym"], s)
+            return true
+        end
+    end
+    if SymbolicUtils.is_called_function_symbolic(gate.symbol)
+        gs = Symbolics.get_variables(gate.symbol)
+        for gsi in gs
+            if isequal(gsi, s)
+                return true
+            end
+        end
+    end
+    return false
+end
+
+function s2g(s, gcol::GateCollection)
+    g = nothing
+    for (_, gates) in gcol.collections
+        for gate in gates
+            if isequal(gate.symbol, s)
+                return gate
+            end
+            if !isnothing(gate.parameters)
+                _s2g_parametric = QCSym.Circuits._s2g_parametric(s, gate)
+                if _s2g_parametric
+                    return gate
+                end
+            end
+
+            if !isnothing(gate.gates22_t)
+                for (__, g22q) in gate.gates22_t
+                    #println("g22q: ", g22q)
+                    for g22 in g22q
+                        if isequal(g22.symbol, s)
+                            return g22
+                        end
+                        if !isnothing(g22.parameters)
+                            _s2g_parametric = QCSym.Circuits._s2g_parametric(s, g22)
+                            if _s2g_parametric
+                                return g22
+                            end
+                        end
+                    end
+                end
+            end
+            if !isnothing(gate.gates22_c)
+                for (__, g22q) in gate.gates22_c
+                    for g22 in g22q
+                        #println("g22: ", g22.symbol)
+                        if isequal(g22.symbol, s)
+                            return g22
+                        end
+                        if !isnothing(g22.parameters)
+                            _s2g_parametric = QCSym.Circuits._s2g_parametric(s, g22)
+                            if _s2g_parametric
+                                return g22
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return g
+end

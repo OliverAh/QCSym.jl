@@ -264,4 +264,3 @@ function _subtypes!(out, type::Type)
     end
     out
 end
-
