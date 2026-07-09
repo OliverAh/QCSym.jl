@@ -18,52 +18,29 @@ function _promote_shape_nD(a::Symbolics.Arr{T}, b::Symbolics.Arr{T2}) where {T, 
     return Tuple(sout)
 end
 
-# ⊗(a::Symbolics.Arr{T}, b::Symbolics.Arr{T2}) where {T, T2} = begin
-#     out_shape = _promote_shape_nD(a, b)
-#     #out_type = Symbolics.Arr{promote_type(eltype(a), eltype(b)),length(out_shape)}
-#     out_type = SymbolicUtils.promote_symtype(*, eltype(a), eltype(b))
-#     return SymbolicUtils.term(⊗, a, b; type=out_type, shape=Tuple(1:o for o in out_shape))
-# end
 
-# ⊗(a::Array{T,2}, b::Array{T2,2}) where {T, T2} = begin
-#     out_shape = _promote_shape_nD(a, b)
-#     #out_type = Symbolics.Arr{promote_type(eltype(a), eltype(b)),length(out_shape)}
-#     out_type = SymbolicUtils.promote_symtype(*, eltype(a), eltype(b))
-#     return SymbolicUtils.term(⊗, a, b; type=out_type, shape=Tuple(1:o for o in out_shape))
-# end
-
-
-
-Symbolics.@register_symbolic ⊗(x1, x2)
-⊗(x1::QCSym.Gates.AbstractQuantumGate, x2::QCSym.Gates.AbstractQuantumGate) = begin
+⊗(x1, x2) = begin
     return SymbolicUtils.term(⊗, x1, x2; type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
 end
-⊗(xs::Vararg{QCSym.Gates.AbstractQuantumGate}) = begin
+
+⊗(x1::Complex{Symbolics.Num}, x2) = begin
+    return SymbolicUtils.term(⊗, x1, x2; type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
+end
+⊗(x1, x2::Complex{Symbolics.Num}) = begin
+    return SymbolicUtils.term(⊗, x1, x2; type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
+end
+⊗(xs::Vararg{Any}) = begin
     return SymbolicUtils.term(⊗, xs...; type=QCSym.Gates._CMQGate{QCSym.BitsRegs.QBit})
 end
 
 
-Symbolics.@register_symbolic ⊙(x1, x2)
 ⊙(x1::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}, x2::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}) = begin
     return SymbolicUtils.term(⊙, x1, x2; type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
 end
-⊙(x1::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}, x2::QCSym.Gates.AbstractQuantumGate) = begin
-    return SymbolicUtils.term(⊙, x1, x2; type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
-end
+
 ⊙(xs::Vararg{SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}}) = begin
     return SymbolicUtils.term(⊙, xs...; type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
 end
-⊙(xs::Vararg{QCSym.Gates.AbstractQuantumGate}) = begin
-    return SymbolicUtils.term(⊙, xs...; type=QCSym.Gates._CMSMQGate{QCSym.BitsRegs.QBit})
-end
-
-println(methods(⊗))
-
-#Symbolics.@register_symbolic ⊗(x1::T, x2::T, x3::T) false false
-#Symbolics.@register_symbolic ⊗(x1::T, x2::T, x3::T, x4::T) false false
-#Symbolics.@register_symbolic ⊗(x1::T, x2::T, x3::T, x4::T, x5::T) false false
-#Symbolics.@register_symbolic ⊗(x1::T, x2::T, x3::T, x4::T, x5::T, x6::T) false false
-#Symbolics.@register_symbolic ⊗(x1::T, x2::T, x3::T, x4::T, x5::T, x6::T, x7::T) false false
 
 is_matop(f) = f === (⊗) || f === (⊙)
 
@@ -74,13 +51,15 @@ depends_on(ex, v) = begin
         return isequal(ex, v) || any([depends_on(exx, v) for exx in ex.args])
     elseif SymbolicUtils.isconst(ex)
         return isequal(ex, v) || isequal(Symbolics.value(ex), v)
+    elseif SymbolicUtils.issym(ex)
+        return isequal(ex, v)
     else
-        return isequal(ex, v) || error("Unhandled expression type in depends_on: $(typeof(ex))")
+        return isequal(ex, v)
     end
 end
 
 has_matop(ex) =
-    SymbolicUtils.iscall(ex) && (is_matop(SymbolicUtils.operation(ex)) || any(has_matop ∘ Symbolics.value, arguments(ex)))
+    SymbolicUtils.iscall(ex) && (is_matop(SymbolicUtils.operation(ex)) || any(has_matop ∘ Symbolics.value, SymbolicUtils.arguments(ex)))
 
 function const_integer(n)
     nv = SymbolicUtils.unwrap_const(Symbolics.value(n))

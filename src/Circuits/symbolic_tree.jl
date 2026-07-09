@@ -39,16 +39,12 @@ function gcol2tree(gcol::GateCollection)
         #     end
         # end
 
-        U_step_sq = QCSym.:⊗(vec_filled_sq_gates...)
+        syms_from_gates = [g.symbol for g in vec_filled_sq_gates]
 
-        println(typeof(U_step_sq))
+        U_step_sq = QCSym.:⊗(syms_from_gates...)
 
         U_step = U_step_sq
-        println(typeof(U_step))
-
-        println(U_step)
-        println(U)
-
+        
         U_intermediate = push!(U_intermediate, U_step)
         #U = U === nothing ? U_step : QCSym.:⊙(U_step, U)
     end

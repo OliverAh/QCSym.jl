@@ -90,8 +90,6 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
         end        
         parameter_symbols = parameters === nothing ? Vector{Union{Complex{Symbolics.Num}}}() : collect(Complex{Symbolics.Num}, v["sym"] for (k,v) in parameters)
         
-        println("Parameter symbols: ", parameter_symbols)
-
         symbol = if isempty(parameter_symbols)
             eval(:(Symbolics.@variables($(Symbol(name))::Complex{Real})[1]))
         else
