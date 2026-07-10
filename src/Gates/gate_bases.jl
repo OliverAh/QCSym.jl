@@ -10,6 +10,10 @@ abstract type AbstractQuantumGate{T} <: AbstractGate end
 abstract type AbstractSingleQubitQuantumGate{T} <: AbstractQuantumGate{T} end
 abstract type AbstractMultiQubitQuantumGate{T} <: AbstractQuantumGate{T} end
 abstract type AbstractInternalSingleQubitQuantumGate{T} <: AbstractQuantumGate{T} end
+abstract type FillerGate end
+
+const GateDecomposition2x2Types = Dict{UInt, Vector{Type{<:AbstractGate}}}
+const GateDecomposition2x2Gates = Dict{UInt, Vector{<:AbstractGate}}
 
 macro insert_fields_AbstractQuantumGate()
     quote
@@ -20,8 +24,10 @@ macro insert_fields_AbstractQuantumGate()
         $(esc(:(is_treat_numeric_only::Bool)))
         $(esc(:(is_treat_alt_only::Bool)))
         $(esc(:(name::String)))
+        $(esc(:(symbol::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal})))
         $(esc(:(name_short::String)))
-        $(esc(:(shape::Tuple{Int, Int})))
+        #$(esc(:(shape::Tuple{Int, Int})))
+        $(esc(:(shape::SymbolicUtils.ShapeT)))
         $(esc(:(qubits::Array{T,1})))
         $(esc(:(qubits_t::Array{T,1})))
         $(esc(:(qubits_c::Union{Nothing, Array{T,1}})))
@@ -34,11 +40,13 @@ macro insert_fields_AbstractQuantumGate()
         $(esc(:(matrix_alt::Union{Nothing, Matrix{Symbolics.Num}, Matrix{Complex{Symbolics.Num}}, Symbolics.Arr{Symbolics.Num,2}, SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}})))
         $(esc(:(ids_matrix_zeros::Union{Nothing, Array{Int, 2}})))
         $(esc(:(matrix_numeric::Union{Nothing, Array{Complex,2}})))
-        $(esc(:(matrix22_t::Union{Nothing, Dict{Int, Vector{Symbolics.Arr{Symbolics.Num,2}}}})))
-        $(esc(:(matrix22_t_alt::Union{Nothing, Dict{Int, Vector{Symbolics.Arr{Symbolics.Num,2}}}})))
-        $(esc(:(matrix22_c::Union{Nothing, Dict{Int, Vector{Symbolics.Arr{Symbolics.Num,2}}}})))
+        $(esc(:(matrix22_t::Union{Nothing, Dict{Int, Vector{Symbolics.Arr{Complex{Symbolics.Num},2}}}})))
+        $(esc(:(matrix22_t_alt::Union{Nothing, Dict{Int, Vector{Union{Nothing, Matrix{Symbolics.Num}, Matrix{Complex{Symbolics.Num}}, Symbolics.Arr{Symbolics.Num,2}, SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}}}}})))
+        $(esc(:(matrix22_c::Union{Nothing, Dict{Int, Vector{Symbolics.Arr{Complex{Symbolics.Num},2}}}})))
         $(esc(:(matrix22_t_numeric::Union{Nothing, Dict{Int, Vector{Array{Complex,2}}}})))
         $(esc(:(matrix22_c_numeric::Union{Nothing, Dict{Int, Vector{Array{Complex,2}}}})))
+        $(esc(:(gates22_t::Union{Nothing, GateDecomposition2x2Gates})))
+        $(esc(:(gates22_c::Union{Nothing, GateDecomposition2x2Gates})))
     end
 end
 
@@ -53,7 +61,9 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
     function mutable_BaseQuantumGate_for_construction(; 
         is_treat_numeric_only::Bool,
         name_prefix::String, name_short::String, qubits_t::Vector{T}, qubits_c::Union{Nothing, Vector{T}}=nothing,
-        step::Int, num_summands_decomposed::Int, parameters::Union{Nothing, AbstractVector{String}, Dict{String, Dict{Symbolics.Num, <:Real}}}=nothing) where {T<:AbstractBit}
+        step::Int, num_summands_decomposed::Int, parameters::Union{Nothing, AbstractVector{String}, Dict{String, Dict{Symbolics.Num, <:Real}}}=nothing,
+        decomposition_t::Union{Nothing, GateDecomposition2x2Types}=nothing,
+        decomposition_c::Union{Nothing, GateDecomposition2x2Types}=nothing) where {T<:AbstractBit}
         
         num_qubits, num_qubits_t, num_qubits_c = _determine_num_qubits(qubits_t, qubits_c)
         is_parametric = parameters !== nothing
@@ -61,7 +71,9 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
         is_treat_alt_only = false
         name=_generate_name_str(name_prefix*name_short, step, qubits_t, qubits_c)
         name_short=name_short
-        shape=(2^num_qubits, 2^num_qubits)
+        #shape=(2^num_qubits, 2^num_qubits)
+        _N = 2^num_qubits
+        shape=SymbolicUtils.ShapeVecT([1:_N, 1:_N])
         qubits_t=qubits_t
         qubits_c=qubits_c
         qubits = isnothing(qubits_c) ? qubits_t : vcat(qubits_t, qubits_c)
@@ -76,9 +88,17 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
                 error("parameters must be either a Vector{Symbolics.Num} or a Dict{Symbolics.Num, <:Complex} or a Dict{Symbolics.Num, <:Real}")
             end
         end        
+        parameter_symbols = parameters === nothing ? Vector{Union{Complex{Symbolics.Num}}}() : collect(Complex{Symbolics.Num}, v["sym"] for (k,v) in parameters)
+        
+        symbol = if isempty(parameter_symbols)
+            eval(:(Symbolics.@variables($(Symbol(name))::Complex{Real})[1]))
+        else
+            out_sym = Symbolics.variable(Symbol(name); T=Symbolics.FnType{Tuple{Vararg{Number}}, Number, Nothing})
+            SymbolicUtils.unwrap(out_sym(parameter_symbols...))
+        end
         atomics = nothing # will be set after matrix
         atomics_alt = parameters === nothing ? nothing : collect(v["sym"] for (k,v) in parameters)
-        matrix = eval(Meta.parse("Symbolics.@variables(($(name)::Complex)[1:$(shape[1]),1:$(shape[2])])"))
+        matrix = eval(Meta.parse("Symbolics.@variables(($(name)::Complex)[$(shape[1]),$(shape[2])])"))
         matrix = matrix[1]
         matrix_alt = nothing
         atomics = Symbolics.scalarize(matrix)[:]
@@ -91,15 +111,44 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
         matrix22_t_numeric=nothing
         matrix22_c_numeric=nothing
 
-        
+        gates22_t=nothing
+        gates22_c=nothing
+
+        if decomposition_t !==nothing && decomposition_c !== nothing
+            @assert allequal([num_summands_decomposed, length(decomposition_t[1]), length(decomposition_c[1])]) "decomposition_t and decomposition_c must have the same length"
+            gates22_t = GateDecomposition2x2Gates()
+            for (idloc, qt) in enumerate(qubits_t)
+                gates22_t[qt.index_global] = [eval(Meta.parse((String(nameof(decomposition_t[idloc][i]))*"_for_Circuit")))(;
+                name_prefix=name, qubits_t=[qubits_t[1]], step=step,is_treat_numeric_only=is_treat_numeric_only,
+                is_treat_alt_only=is_treat_alt_only) for i in 1:num_summands_decomposed]
+            end
+            gates22_c = GateDecomposition2x2Gates()
+            for (idloc, qc) in enumerate(qubits_c)
+                gates22_c[qc.index_global] = [eval(Meta.parse((String(nameof(decomposition_c[idloc][i]))*"_for_Circuit")))(;
+                name_prefix=name, qubits_t=[qubits_t[1]], step=step,is_treat_numeric_only=is_treat_numeric_only,
+                is_treat_alt_only=is_treat_alt_only) for i in 1:num_summands_decomposed]
+            end
+           
+           
+        #    Dict(i => eval(Meta.parse((String(nameof(decomposition_t[i]))*"_for_Circuit")))(;
+        #    name_prefix=name, qubits_t=[qubits_t[1]], step=step,is_treat_numeric_only=is_treat_numeric_only,
+        #    is_treat_alt_only=is_treat_alt_only) for i in 1:num_summands_decomposed)
+               
+        # elseif decomposition_t === nothing && decomposition_c === nothing
+        #     continue
+        elseif decomposition_t !== nothing && decomposition_c === nothing
+            @error("decomposition_t is provided but decomposition_c is not. Either both or none must be provided.")
+        elseif decomposition_t === nothing && decomposition_c !== nothing
+            @error("decomposition_c is provided but decomposition_t is not. Either both or none must be provided.")
+        end
 
         return new{T}(num_qubits, num_qubits_t, num_qubits_c,
             is_parametric, is_treat_numeric_only, is_treat_alt_only,
-            name, name_short, shape, qubits, qubits_t, qubits_c,
+            name, symbol, name_short, shape, qubits, qubits_t, qubits_c,
             step, num_summands_decomposed, parameters, atomics, atomics_alt,
             matrix, matrix_alt, ids_matrix_zeros, matrix_numeric,
             matrix22_t, matrix22_t_alt, matrix22_c,
-            matrix22_t_numeric, matrix22_c_numeric
+            matrix22_t_numeric, matrix22_c_numeric, gates22_t, gates22_c
         )
     end
 end
@@ -196,7 +245,6 @@ Base.show(io::IO, gate::T) where {T <: AbstractQuantumGate} = begin
     end
 end
 
-
 function get_all_concrete_gates()
     
     return _subtypes(AbstractSingleQubitQuantumGate)
@@ -216,4 +264,3 @@ function _subtypes!(out, type::Type)
     end
     out
 end
-

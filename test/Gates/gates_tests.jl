@@ -19,11 +19,11 @@ function custom_issapprox_for_vecs_or_mats(vec_or_mat1, vec_or_mat2; atol=1e-12)
 end
 
 
-@testset "Gates Tests" begin
+@testset verbose=true "Gates Tests" begin
     println("Running gates tests...")
     println(QCSym.Gates.get_all_concrete_gates())
     
-    @testset "gate actions of state" begin
+    @testset verbose=true "gate actions on state" begin
         @testset "H gate action on 2 qubit system" begin
             q1 = [0.5+0im, sqrt(3)/2+0im]
             q2 = [sqrt(5)+0im, 0.0+2.0im]
