@@ -33,6 +33,10 @@ end
     return SymbolicUtils.term(⊗, xs...; type=SymbolicUtils.SymReal)
 end
 
+⊗(xs::Vararg{AbstractArray{<:Number}}) = begin
+    return LinearAlgebra.kron(xs...)
+end
+
 ⊗(x1::Number, x2::Number) = begin
     return x1 * x2
 end
@@ -69,6 +73,10 @@ end
 ⊙(xs::Vararg{AbstractMatrix{<:Number}}) = begin
     return *(xs...)
 end
+
+# Base.:+(xs::Vararg{SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}}) = begin
+#     return SymbolicUtils.term(+, xs...; type=SymbolicUtils.SymReal)
+# end
 
 
 SymbolicUtils.islike(a::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}, ::Type{Number}) = true
