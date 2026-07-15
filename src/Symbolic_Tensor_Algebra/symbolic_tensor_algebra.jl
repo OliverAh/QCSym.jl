@@ -77,6 +77,10 @@ end
     return *(xs...)
 end
 
+# ⊙(xs::Vararg{Any}) = begin
+#     return SymbolicUtils.term(⊙, xs...; type=SymbolicUtils.SymReal)
+# end
+
 # Base.:+(xs::Vararg{SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}}) = begin
 #     return SymbolicUtils.term(+, xs...; type=SymbolicUtils.SymReal)
 # end
