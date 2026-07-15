@@ -1,15 +1,13 @@
 function gcol2tree(gcol::GateCollection)
     stepwise_gates = _extract_gates_stepwise(gcol)
-    
     steps = sort(collect(keys(stepwise_gates)))
-    num_steps = length(steps)
-
+    
     num_qubits = _get_num_qubits(gcol)
     
     symbolic_steps = Dict{Int, Vector{<:QCSym.Gates.AbstractGate}}()
-    println("Converting gate collection to symbolic tree representation...")
-    println("   Number of unique steps: $num_steps")
-    println("   Number of qubits: $num_qubits")
+    # println("Converting gate collection to symbolic tree representation...")
+    # println("   Number of unique steps: $num_steps")
+    # println("   Number of qubits: $num_qubits")
 
     U = nothing
     U_intermediate = QCSym.SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{QCSym.SymbolicUtils.SymReal}[]
@@ -26,6 +24,7 @@ function gcol2tree(gcol::GateCollection)
         vec_filled_sq_gates = Vector{QCSym.Gates.AbstractGate}()
         for i in 1:num_qubits
             push!(vec_filled_sq_gates, QCSym.Gates.I_Gate_Filler(i))
+            #push!(vec_filled_sq_gates, QCSym.Gates.I_Gate_for_Circuit(qubits_t=stepwise_gates[1][1], step::Int, is_treat_numeric_only::Bool, _...))
         end
         for sqg in sq_gates_sorted
             qid = sqg.qubits_t[1].index_global
@@ -63,10 +62,10 @@ function gcol2tree(gcol::GateCollection)
 
 
         #U_step = U_step_sq
-        if !isempty(U_step_sq)
+        if !isempty(sq_gates)
             U_intermediate = push!(U_intermediate, U_step_sq)
         end
-        if !isempty(U_step_mq)
+        if !isempty(mq_gates)
             U_intermediate = push!(U_intermediate, U_step_mq...)
         end
     end

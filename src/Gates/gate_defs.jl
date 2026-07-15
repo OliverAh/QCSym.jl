@@ -58,10 +58,12 @@ end
 struct I_Gate_Filler{T<:Int} <: AbstractSingleQubitQuantumGate{T}
     qbit_glob_id::T
     shape::SymbolicUtils.ShapeT
-    symbol::Symbolics.Num
+    symbol::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}
+    matrix_numeric::Array{Complex,2}
     #@insert_fields_AbstractQuantumGate()
     #@constructor_from_mutable_base(I_Gate, mutable_BaseQuantumGate_for_construction)
-    I_Gate_Filler(qbit_glob_id::T) where {T<:Int} = new{T}(qbit_glob_id, SymbolicUtils.ShapeVecT([1:2,1:2]), SymbolicUtils.one_of_vartype(SymbolicUtils.SymReal))
+    #I_Gate_Filler(qbit_glob_id::T) where {T<:Int} = new{T}(qbit_glob_id, SymbolicUtils.ShapeVecT([1:2,1:2]), SymbolicUtils.one_of_vartype(SymbolicUtils.SymReal), [1 0; 0 1])
+    I_Gate_Filler(qbit_glob_id::T) where {T<:Int} = new{T}(qbit_glob_id, SymbolicUtils.ShapeVecT([1:2,1:2]), eval(:(Symbolics.@variables($(Symbol("I"))::Complex{Real})[1])), [1 0; 0 1])
 end
 
 Base.show(io::IO, gate::I_Gate_Filler) = begin
@@ -338,8 +340,12 @@ function P_Gate_for_Circuit(;name_prefix::String="", qubits_t::AbstractVector{QB
         step=step, num_summands_decomposed=1, parameters = params)
     λ = base_gate.parameters["λ"]["sym"]
     
-    base_gate.matrix_alt = Matrix([1.0 0.0;
-                                   0.0 exp(1im*λ)])
+    # base_gate.matrix_alt = Matrix([1.0 0.0;
+    #                                0.0 exp(1im*λ)])
+    # base_gate.matrix_alt = [1.0 0.0;
+    #                                0.0 cos(λ)+1im*sin(λ)]
+    base_gate.matrix_alt = [1.0 0.0;
+                                   0.0 λ]
     base_gate.is_treat_alt_only = is_treat_alt_only
     return P_Gate(base_gate)
 end

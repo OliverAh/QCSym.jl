@@ -53,6 +53,9 @@ end
 ⊙(xs::Vararg{SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}}) = begin
     return SymbolicUtils.term(⊙, xs...; type=SymbolicUtils.SymReal)
 end
+⊙(xs::AbstractMatrix...) = begin
+    return *(xs...)
+end
 
 ⊙(x1::Number, x2::Number) = begin
     return x1 * x2

@@ -56,7 +56,7 @@ function _extract_gates_stepwise(gcol::GateCollection)
     gcol_sorted_by_steps = _sort_by_step(gcol)
     num_steps = _get_num_steps(gcol)
     max_step_num = _get_max_step_number(gcol)
-    @warn "Extracting gates stepwise from gate collection. Number of unique steps: $num_steps, Max step number: $max_step_num. Consider compressing the circuit to reduce the number of steps."
+    #@warn "Extracting gates stepwise from gate collection. Number of unique steps: $num_steps, Max step number: $max_step_num. Consider compressing the circuit to reduce the number of steps."
     
     stepwise_gates = Dict{Int, Vector{QCSym.Gates.AbstractGate}}(i => QCSym.Gates.AbstractGate[] for i in 1:max_step_num)
     
