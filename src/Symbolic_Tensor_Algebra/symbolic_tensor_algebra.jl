@@ -50,6 +50,18 @@ end
     return SymbolicUtils.term(⊙, x1, x2; type=SymbolicUtils.SymReal)
 end
 
+⊙(x1::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}, x2::Union{Symbolics.Num, Complex{Symbolics.Num}}) = begin
+    return SymbolicUtils.term(⊙, x1, x2; type=SymbolicUtils.SymReal)
+end
+
+⊙(x1::Union{Symbolics.Num, Complex{Symbolics.Num}}, x2::SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}) = begin
+    return SymbolicUtils.term(⊙, x1, x2; type=SymbolicUtils.SymReal)
+end
+
+⊙(x1::Union{Symbolics.Num, Complex{Symbolics.Num}}, x2::Union{Symbolics.Num, Complex{Symbolics.Num}}) = begin
+    return SymbolicUtils.term(⊙, x1, x2; type=SymbolicUtils.SymReal)
+end
+
 ⊙(xs::Vararg{SymbolicUtils.BasicSymbolicImpl.var"typeof(BasicSymbolicImpl)"{SymbolicUtils.SymReal}}) = begin
     return SymbolicUtils.term(⊙, xs...; type=SymbolicUtils.SymReal)
 end
@@ -100,7 +112,7 @@ depends_on(ex, v) = begin
     elseif SymbolicUtils.issym(ex)
         return isequal(ex, v)
     else
-        return isequal(ex, v)
+        return false#isequal(ex, v)
     end
 end
 
@@ -121,16 +133,21 @@ function kron_derivative(ex, v)
     op = SymbolicUtils.operation(exv)
     args = map(Symbolics.wrap, SymbolicUtils.arguments(exv))
     if op === (+)
-        return sum(kron_derivative(arg, v) for arg in args)
+        #return sum(kron_derivative(arg, v) for arg in args)
+        return SymbolicUtils.term(+, (kron_derivative(arg, v) for arg in args)...; type=QCSym.SymbolicUtils.SymReal)
     elseif op === (*) || is_matop(op)
         # product rule for multilinear ops, preserving argument order
         terms = Any[]
         for i in eachindex(args)
+            if !depends_on(args[i], v)
+                continue
+            end
             di = kron_derivative(args[i], v)
             isequal(di, 0) && continue
             push!(terms, op(args[1:(i - 1)]..., di, args[(i + 1):end]...))
         end
-        return isempty(terms) ? 0 : sum(terms)
+        #return isempty(terms) ? 0 : sum(terms)
+        return isempty(terms) ? 0 : SymbolicUtils.term(+, terms...; type=QCSym.SymbolicUtils.SymReal)
     elseif op === (^)
         X, n = args
         nval = const_integer(n)

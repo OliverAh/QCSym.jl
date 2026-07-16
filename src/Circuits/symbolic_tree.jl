@@ -101,8 +101,6 @@ function _mul_sum_sum(x, y)
 end
 
 function _mul_unknown(x, y)
-    println(x)
-    println(y)
     if x.f==QCSym.:+ && y.f==QCSym.:+
         return _mul_sum_sum(x, y)
     elseif x.f==QCSym.:+ && y.f==QCSym.:⊗
@@ -192,10 +190,10 @@ function gcol2tree2(gcol::GateCollection)
         if !isempty(sq_gates) && !isempty(mq_gates)
             U_step = _mul_unknown(U_step_sq, U_step_mq)
         end
-        println("U_step: ", U_step)
+        #println("U_step: ", U_step)
         U = U===nothing ? U_step : _mul_unknown(U_step, U)
-        println("U: ")
-        println(U)
+        #println("U: ")
+        #println(U)
     end
     #U = QCSym.:⊙(U_intermediate...)
     

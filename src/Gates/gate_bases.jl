@@ -89,7 +89,8 @@ mutable struct mutable_BaseQuantumGate_for_construction{T<:AbstractBit} <: Abstr
                 error("parameters must be either a Vector{Symbolics.Num} or a Dict{Symbolics.Num, <:Complex} or a Dict{Symbolics.Num, <:Real}")
             end
         end        
-        parameter_symbols = parameters === nothing ? Vector{Union{Complex{Symbolics.Num}}}() : collect(Complex{Symbolics.Num}, v["sym"] for (k,v) in parameters)
+        #parameter_symbols = parameters === nothing ? Vector{Union{Complex{Symbolics.Num}}}() : collect(Complex{Symbolics.Num}, v["sym"] for (k,v) in parameters)
+        parameter_symbols = parameters === nothing ? Vector{Symbolics.Num}() : collect(Symbolics.Num, v["sym"] for (k,v) in parameters)
         
         symbol = if isempty(parameter_symbols)
             eval(:(Symbolics.@variables($(Symbol(name))::Complex{Real})[1]))
